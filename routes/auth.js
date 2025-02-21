@@ -11,10 +11,12 @@ router.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = users.find((u) => u.username === username && u.password === password);
 
-  if (!user) return res.status(401).json({ message: "Invalid credentials" });
+  if (!user) {
+    return res.status(401).json({ statuscode:401,message: "Invalid credentials" });
+  }
 
   const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" });
-  res.json({ token });
+  res.json({  statusCode: 200,token: token });
 });
 
 module.exports = router;
