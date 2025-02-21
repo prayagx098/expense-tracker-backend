@@ -5,32 +5,30 @@ const User = require("../models/User");
 
 const router = express.Router();
 
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
 
+// Login Route
+router.post("/login", async (req, res) => {
   try {
-    // Find the user by username
+    const { username, password } = req.body;
+    
     const user = await User.findOne({ username });
 
-    // Check if user exists
     if (!user) {
-      return res.status(401).json({ statusCode: 401, message: "Invalid credentials" });
+      return res.status(401).json({ statusCode:401,message: "Invalid credentials" });
     }
 
-    // Compare the password with the hashed password in the database
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = password === user.password;
 
     if (!isMatch) {
-      return res.status(401).json({ statusCode: 401, message: "Invalid credentials" });
+      return res.status(401).json({statusCode:401, message: "Invalid credentials" });
     }
-
-    // Generate JWT token
+    
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    res.json({ statusCode:200,token:token });
 
-    return res.json({ statusCode: 200, token });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ statusCode: 500, message: "Server error" });
+    res.status(500).json({statusCode:500, message: "Server error" });
   }
 });
 
