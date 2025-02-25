@@ -16,6 +16,8 @@ app.get("/", (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", require("./routes/auth"));
+// Dashboard data route
+app.use("/api/dashboard", require("./routes/dashboard"));
 
 // Test Route
 app.get("/api/test", (req, res) => {
