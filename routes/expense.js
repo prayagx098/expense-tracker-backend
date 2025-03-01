@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Expense = require('../models/Expense');
+const updateDashboard = require('../utils/updateDashboard');
 const router = express.Router();
 
 // Middleware to validate ObjectId
@@ -30,6 +31,9 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
     }
 
     await expense.save();
+
+    // Update dashboard data
+    await updateDashboard(fkUserLoginId);
     res.status(200).json(expense);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -68,6 +72,9 @@ router.delete('/:fkUserLoginId/:month/:transactionId', async (req, res) => {
           (tx) => tx._id.toString() !== transactionId
         );
         await expense.save();
+
+        // Update dashboard data
+      await updateDashboard(fkUserLoginId);
         res.status(200).json({ message: 'Transaction deleted successfully' });
       } else {
         res.status(404).json({ message: 'Expense not found' });
