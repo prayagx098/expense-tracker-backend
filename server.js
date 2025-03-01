@@ -50,6 +50,9 @@ app.get("/api/test", (req, res) => {
     res.json({ message: "Connection Successful! 🚀", status: "ok" });
 });
 
+// Routes
+app.use('/api/expenses', require('./routes/expense'));
+
 // Start Server (only one `app.listen()`)
 const PORT = process.env.PORT || 5000;
 
