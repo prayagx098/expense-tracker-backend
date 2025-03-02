@@ -22,10 +22,10 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
     // Convert fkUserLoginId to ObjectId
     const userId = new mongoose.Types.ObjectId(fkUserLoginId);
 
-    let expense = await Expense.findOne({ fkUserLoginId: userId, month });
+    let expense = await Expense.findOne({ fkUserLoginId: userId, month:month });
 
     if (expense) {
-      expense.transactions = transactions;
+        expense.transactions = [...expense.transactions, ...transactions];
     } else {
       expense = new Expense({ fkUserLoginId: userId, month, transactions });
     }
