@@ -33,12 +33,12 @@ const updateDashboard = async (fkUserLoginId) => {
 
     // Update the dashboard document for the current month
     await Dashboard.findOneAndUpdate(
-      { fkUserLoginId, month: currentMonthKey }, // Filter by user and current month
+      { fkUserLoginId }, // Filter by user and current month
       { totalIncome, totalExpense, netSavings },
       { upsert: true, new: true } // Create if it doesn't exist
     );
 
-    console.log(`Dashboard updated successfully for ${currentMonthKey}`);
+    console.log(`Dashboard updated successfully`);
   } catch (error) {
     console.error('Error updating dashboard:', error);
   }
