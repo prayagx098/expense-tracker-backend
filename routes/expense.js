@@ -75,8 +75,8 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
         await prevExpense.save();
       }
   
-      // Update dashboard data
-      await updateDashboard(fkUserLoginId);
+      // Update dashboard data for the current month
+      await updateDashboard(fkUserLoginId, month);
   
       res.status(200).json({ message: "Transactions saved successfully" });
     } catch (error) {
