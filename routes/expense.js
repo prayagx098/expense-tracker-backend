@@ -25,18 +25,36 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
       const newTransactions = [];
       const previousMonthTransactions = {};
   
-      transactions.forEach(tx => {
-        const transactionMonth = new Date(tx.date).toISOString().slice(0, 7); // Format YYYY-MM
+      // Helper function to check if a transaction already exists
+      const isDuplicate = (existingTransactions, newTransaction) => {
+        return existingTransactions.some(
+          (tx) =>
+            tx.title === newTransaction.title &&
+            tx.amount === newTransaction.amount &&
+            new Date(tx.date).toISOString() === new Date(newTransaction.date).toISOString() &&
+            tx.category === newTransaction.category &&
+            tx.isIncome === newTransaction.isIncome
+        );
+      };
+  
+      // Process each transaction
+      transactions.forEach((tx) => {
+        const transactionMonth = new Date(tx.date).toISOString().slice(0, 7);
         if (transactionMonth === month) {
-          newTransactions.push(tx);
+          if (!expense || !isDuplicate(expense.transactions, tx)) {
+            newTransactions.push(tx);
+          }
         } else {
           if (!previousMonthTransactions[transactionMonth]) {
             previousMonthTransactions[transactionMonth] = [];
           }
-          previousMonthTransactions[transactionMonth].push(tx);
+          if (!isDuplicate(previousMonthTransactions[transactionMonth], tx)) {
+            previousMonthTransactions[transactionMonth].push(tx);
+          }
         }
       });
   
+      // Save new transactions for the current month
       if (newTransactions.length > 0) {
         if (expense) {
           expense.transactions = [...expense.transactions, ...newTransactions];
@@ -46,7 +64,7 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
         await expense.save();
       }
   
-      // Store transactions for previous months in new documents
+      // Save transactions for previous months
       for (const [prevMonth, transactions] of Object.entries(previousMonthTransactions)) {
         let prevExpense = await Expense.findOne({ fkUserLoginId: userId, month: prevMonth });
         if (prevExpense) {
@@ -59,13 +77,12 @@ router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
   
       // Update dashboard data
       await updateDashboard(fkUserLoginId);
-      
+  
       res.status(200).json({ message: "Transactions saved successfully" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
   });
-  
 
 // Get Expense for a specific month
 router.get('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
