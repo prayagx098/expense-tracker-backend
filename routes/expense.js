@@ -13,32 +13,59 @@ const validateObjectId = (req, res, next) => {
   next();
 };
 
-// Create or Update Expense for a specific month
 router.post('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
-  const { fkUserLoginId, month } = req.params;
-  const { transactions } = req.body;
-
-  try {
-    // Convert fkUserLoginId to ObjectId
-    const userId = new mongoose.Types.ObjectId(fkUserLoginId);
-
-    let expense = await Expense.findOne({ fkUserLoginId: userId, month:month });
-
-    if (expense) {
-        expense.transactions = [...expense.transactions, ...transactions];
-    } else {
-      expense = new Expense({ fkUserLoginId: userId, month, transactions });
+    const { fkUserLoginId, month } = req.params;
+    const { transactions } = req.body;
+  
+    try {
+      const userId = new mongoose.Types.ObjectId(fkUserLoginId);
+  
+      let expense = await Expense.findOne({ fkUserLoginId: userId, month });
+  
+      const newTransactions = [];
+      const previousMonthTransactions = {};
+  
+      transactions.forEach(tx => {
+        const transactionMonth = new Date(tx.date).toISOString().slice(0, 7); // Format YYYY-MM
+        if (transactionMonth === month) {
+          newTransactions.push(tx);
+        } else {
+          if (!previousMonthTransactions[transactionMonth]) {
+            previousMonthTransactions[transactionMonth] = [];
+          }
+          previousMonthTransactions[transactionMonth].push(tx);
+        }
+      });
+  
+      if (newTransactions.length > 0) {
+        if (expense) {
+          expense.transactions = [...expense.transactions, ...newTransactions];
+        } else {
+          expense = new Expense({ fkUserLoginId: userId, month, transactions: newTransactions });
+        }
+        await expense.save();
+      }
+  
+      // Store transactions for previous months in new documents
+      for (const [prevMonth, transactions] of Object.entries(previousMonthTransactions)) {
+        let prevExpense = await Expense.findOne({ fkUserLoginId: userId, month: prevMonth });
+        if (prevExpense) {
+          prevExpense.transactions = [...prevExpense.transactions, ...transactions];
+        } else {
+          prevExpense = new Expense({ fkUserLoginId: userId, month: prevMonth, transactions });
+        }
+        await prevExpense.save();
+      }
+  
+      // Update dashboard data
+      await updateDashboard(fkUserLoginId);
+      
+      res.status(200).json({ message: "Transactions saved successfully" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-
-    await expense.save();
-
-    // Update dashboard data
-    await updateDashboard(fkUserLoginId);
-    res.status(200).json(expense);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+  });
+  
 
 // Get Expense for a specific month
 router.get('/:fkUserLoginId/:month', validateObjectId, async (req, res) => {
