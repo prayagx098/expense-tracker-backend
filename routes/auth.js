@@ -6,7 +6,6 @@ const User = require("../models/User");
 const router = express.Router();
 
 
-// Login Route
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -14,21 +13,31 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({ username });
 
     if (!user) {
-      return res.status(401).json({ statusCode:401,message: "Invalid credentials" });
+      return res.status(401).json({ statusCode: 401, message: "Invalid credentials" });
     }
 
     const isMatch = password === user.password;
 
     if (!isMatch) {
-      return res.status(401).json({statusCode:401, message: "Invalid credentials" });
+      return res.status(401).json({ statusCode: 401, message: "Invalid credentials" });
     }
     
-    const token = jwt.sign({ username, userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ statusCode:200,token:token, userLoginId: user._id  });
+    const token = jwt.sign(
+      { username, userId: user._id, isAdmin: user.isAdmin || false }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "1h" }
+    );
+
+    res.json({ 
+      statusCode: 200, 
+      token: token, 
+      userLoginId: user._id,
+      isAdmin: user.isAdmin || false
+    });
 
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({statusCode:500, message: "Server error" });
+    res.status(500).json({ statusCode: 500, message: "Server error" });
   }
 });
 
