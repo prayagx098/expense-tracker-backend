@@ -13,12 +13,8 @@ router.post('/register', async (req, res) => {
         let user = await User.findOne({ username });
         if (user) return res.status(400).json({ message: "User already exists" });
 
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
         // Create new user with hardcoded isAdmin as false
-        user = new User({ username, password: hashedPassword, isAdmin: false });
+        user = new User({ username, password: password, isAdmin: false });
 
         await user.save();
 
@@ -26,7 +22,6 @@ router.post('/register', async (req, res) => {
         const dashboard = new Dashboard({
             fkUserLoginId: user._id,
             userName: user.username,
-            month: new Date().toLocaleString('default', { month: 'long' }),
             totalIncome: 0,
             totalExpense: 0,
             netSavings: 0
