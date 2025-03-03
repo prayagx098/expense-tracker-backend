@@ -7,23 +7,25 @@ const bcrypt = require('bcrypt');
 // Register User Route
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, isAdmin } = req.body;
+        const { username, password } = req.body;
 
         // Check if user exists
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ username });
         if (user) return res.status(400).json({ message: "User already exists" });
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        user = new User({ name, email, password: hashedPassword, isAdmin });
+        // Create new user with hardcoded isAdmin as false
+        user = new User({ username, password: hashedPassword, isAdmin: false });
 
         await user.save();
 
+        // Create Dashboard for the user
         const dashboard = new Dashboard({
             fkUserLoginId: user._id,
-            userName: user.name,
+            userName: user.username,
             month: new Date().toLocaleString('default', { month: 'long' }),
             totalIncome: 0,
             totalExpense: 0,
@@ -39,5 +41,6 @@ router.post('/register', async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 });
+
 
 module.exports = router;

@@ -31,7 +31,7 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 
 app.use('/api/chat', require("./routes/chat"));
 
-app.use('/api/users', userRoutes);
+app.use('/api/users', require("./routes/userRoutes"));
 
 // Listen for socket connections
 io.on('connection', (socket) => {
