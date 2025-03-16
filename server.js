@@ -33,7 +33,6 @@ app.use('/api/chat', require("./routes/chat"));
 
 app.use('/api/users', require("./routes/userRoutes"));
 
-app.use('/api/workout', require("./routes/workout"));
 
 // Listen for socket connections
 io.on('connection', (socket) => {
